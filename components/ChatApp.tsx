@@ -551,6 +551,7 @@ export default function ChatApp() {
                 {input.length > 0 ? `${input.length}/${MAX_LEN}` : ""}
               </span>
             </div>
+            <p className="mt-1 text-center text-[11px] text-zinc-400">© 2026 Sirena Invest OÜ. Built with Claude Code</p>
           </div>
         </footer>
       </main>
