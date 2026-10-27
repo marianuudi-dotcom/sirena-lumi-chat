@@ -172,9 +172,25 @@ export default function ChatApp() {
     }
   }
 
+  // Sliders: update locally at once, save both values once the user stops moving (avoids out-of-order saves)
+  const saveTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  function changeSetting(k: "temperature" | "topP", value: number) {
+    if (!chat) return;
+    const next = { ...chat, [k]: value };
+    setChat((c) => (c && c.id === chat.id ? { ...c, [k]: value } : c));
+    if (saveTimer.current) clearTimeout(saveTimer.current);
+    const id = chat.id;
+    saveTimer.current = setTimeout(() => {
+      api(`/api/chats/${id}`, {
+        method: "PATCH",
+        body: JSON.stringify({ temperature: next.temperature, topP: next.topP }),
+      }).catch((e) => setError((e as Error).message));
+    }, 400);
+  }
+
   async function updateChat(patch: Partial<Chat> & { clearMessages?: boolean }) {
     if (!chat) return;
-    setChat({ ...chat, ...patch, messages: patch.clearMessages ? [] : chat.messages } as Chat);
+    setChat((c) => (c ? ({ ...c, ...patch, messages: patch.clearMessages ? [] : c.messages } as Chat) : c));
     try {
       await api(`/api/chats/${chat.id}`, { method: "PATCH", body: JSON.stringify(patch) });
       if (patch.clearMessages) await loadChats();
@@ -363,10 +379,7 @@ export default function ChatApp() {
                   max={1}
                   step={0.1}
                   value={chat[k]}
-                  onChange={(e) => setChat({ ...chat, [k]: Number(e.target.value) })}
-                  onMouseUp={(e) => updateChat({ [k]: Number((e.target as HTMLInputElement).value) })}
-                  onTouchEnd={(e) => updateChat({ [k]: Number((e.target as HTMLInputElement).value) })}
-                  onKeyUp={(e) => updateChat({ [k]: Number((e.target as HTMLInputElement).value) })}
+                  onChange={(e) => changeSetting(k, Number(e.target.value))}
                   className="w-full"
                 />
                 <div className="text-xs text-zinc-400">

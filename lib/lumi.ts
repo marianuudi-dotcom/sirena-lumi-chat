@@ -104,7 +104,7 @@ export function answer(
     const s = sentences(body).slice(0, 3);
     body = s.map((x) => `• ${x}`).join("\n");
   }
-  const opener = opts.persona && OPENERS[opts.persona] ? OPENERS[opts.persona] + "\n\n" : "";
+  const opener = opts.persona ? (OPENERS[opts.persona] ?? `${opts.persona} here – my advice:`) + "\n\n" : "";
   let content = opener + body;
   if (opts.model === "Lumi Detailed") content += `\n\nTopic: ${e.category} · Age group: ${e.ageGroup}`;
   if (opts.temperature > 0.6 && opts.extraTip) content += `\n\n💡 Extra tip: ${opts.extraTip}`;
